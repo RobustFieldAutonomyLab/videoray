@@ -1,0 +1,8 @@
+##########################
+# Tritech USBL Parameters
+##########################
+topic : "~usbl_pose"
+frame_id : "/odom"
+port : "/dev/usbl"
+baudrate : 19200
+# default : 8, N, 1

@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="videoray_sonar" name="videoray_sonar" type="videoray_sonar" output="screen">
+        <rosparam command="load" file="$(find videoray_launch)/params/sonar.yaml" />
+    </node>
+    <!-- <node pkg="rviz" name="sonar_rviz" type="rviz" args="-d $(find videoray_launch)/gui/sonarscan.rviz" /> -->
+</launch>

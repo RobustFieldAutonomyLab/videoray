@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="videoray_input" name="videoray_input" type="videoray_input" output="screen">
+        <rosparam command="load" file="$(find videoray_launch)/params/joystick.yaml" />
+    </node>
+</launch>

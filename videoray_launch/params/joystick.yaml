@@ -1,0 +1,5 @@
+#################################
+##### Joystick Parameters #######
+#################################
+port: "/dev/input/videorayjs"
+tick_rate: 100

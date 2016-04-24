@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="videoray_control" name="videoray_control" type="videoray_control" output="screen">
+        <rosparam command="load" file="$(find videoray_launch)/params/control.yaml" />
+    </node>
+</launch>
