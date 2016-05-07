@@ -8,7 +8,7 @@
 #include <geometry_msgs/TwistStamped.h>
 
 #include <geometry_msgs/Vector3.h>
-
+#include <geometry_msgs/Vector3Stamped.h>
 #include "videoray_comm/VideoRayComm.h"
 #include <syllo_common/SylloNode.h>
 #include <syllo_common/Filter.h>
@@ -111,6 +111,13 @@ void callback_desired_trajectory(const videoray_control::DesiredTrajectoryConstP
      desired_trajectory_ = *msg;
 }
 
+void callback_rfal_vr_throttle_cmd( const geometry_msgs::Vector3::ConstPtr& throttle_data )
+{
+  star_thrust_ = throttle_data->x; // starboard 
+  port_thrust_ = throttle_data->y; // port
+  vert_thrust_ = throttle_data->z; // vert
+}
+
 videoray_control::UHRIComm uhri_comm_;
 void callback_uhri_comm(const videoray_control::UHRICommConstPtr& msg)
 {
@@ -174,6 +181,14 @@ int main(int argc, char **argv)
      ros::Publisher throttle_pub_ = n_.advertise<videoray_control::Throttle>("throttle_cmd", 1);
      ros::Publisher twist_pub_ = n_.advertise<geometry_msgs::TwistStamped>("accelerations",1);
      ros::Publisher videoray_status_pub_ = n_.advertise<videoray_control::Status>("videoray_status",1);
+   
+     // position-controller-specific topics
+     ros::Publisher rfal_vr_euler_pub = n_.advertise
+       <geometry_msgs::Vector3Stamped>( "rfal_vr_euler" , 1 );
+     ros::Publisher rfal_vr_accel_pub = n_.advertise
+       <geometry_msgs::TwistStamped>( "rfal_vr_accel" , 1 ); 
+     ros::Subscriber rfal_vr_throttle_cmd_sub = n_.subscribe<>
+       ( "/rfal_vr_throttle_cmd" , 1 , callback_rfal_vr_throttle_cmd );
 
      geometry_msgs::PoseStamped pose_stamped_;
      geometry_msgs::TwistStamped twist_stamped_;
@@ -496,6 +511,33 @@ int main(int argc, char **argv)
           twist_stamped_.twist.angular.z = comm.yaw_accel();
 
           twist_pub_.publish(twist_stamped_);
+
+	  //
+	  // position-controller-specific topics
+	  //
+	  geometry_msgs::Vector3Stamped rfal_vr_euler;
+	  rfal_vr_euler.header.seq = 0;
+	  rfal_vr_euler.header.stamp = ros::Time( ).now( );
+	  rfal_vr_euler.header.frame_id = "rfal_vr";
+
+	  rfal_vr_euler.vector.x = comm.roll( );
+	  rfal_vr_euler.vector.y = comm.pitch( );
+	  rfal_vr_euler.vector.z = comm.heading( );
+    rfal_vr_euler_pub.publish( rfal_vr_euler );
+
+	  geometry_msgs::TwistStamped rfal_vr_accel;
+	  rfal_vr_accel.header.seq = 0;
+	  rfal_vr_accel.header.stamp = ros::Time( ).now( );
+	  rfal_vr_accel.header.frame_id = "rfal_vr";
+	  
+	  rfal_vr_accel.twist.linear.x = comm.surge_accel( );
+	  rfal_vr_accel.twist.linear.y = comm.sway_accel( );
+	  rfal_vr_accel.twist.linear.z = comm.heave_accel( );
+	   
+	  rfal_vr_accel.twist.angular.x = comm.roll_accel( );
+	  rfal_vr_accel.twist.angular.y = comm.pitch_accel( );
+	  rfal_vr_accel.twist.angular.z = comm.yaw_accel( );
+	  rfal_vr_accel_pub.publish( rfal_vr_accel );
 
           status = comm.request_status();
           if (status != VideoRayComm::Success) {
