@@ -87,6 +87,7 @@ public:
      Status_t send_control_command();
      Status_t send_nav_data_command();
      Status_t request_status();
+     Status_t set_depth_pid_parameters();
 
      double depth();
      double heading();

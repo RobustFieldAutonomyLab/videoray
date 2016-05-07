@@ -24,6 +24,24 @@
 
 #define TX_CTRL_SIZE     15
 
+#define AUTO_DEPTH_P_LSB 38
+#define AUTO_DEPTH_P_MSB 39
+#define AUTO_DEPTH_I_LSB 40
+#define AUTO_DEPTH_I_MSB 41
+#define AUTO_DEPTH_D_LSB 42
+#define AUTO_DEPTH_D_MSB 43
+#define AUTO_DEPTH_K_LSB 44
+#define AUTO_DEPTH_K_MSB 45
+
+#define AUTO_HEADING_P_LSB 46
+#define AUTO_HEADING_P_LSB 47
+#define AUTO_HEADING_I_LSB 48
+#define AUTO_HEADING_I_LSB 49
+#define AUTO_HEADING_D_LSB 50
+#define AUTO_HEADING_D_LSB 51
+#define AUTO_HEADING_K_LSB 52
+#define AUTO_HEADING_K_LSB 53
+
 ////////////////////////////////
 //// RX Control Packet Defines
 ////////////////////////////////
@@ -151,6 +169,8 @@ VideoRayComm::VideoRayComm(std::string port)
      heading_ = 0;
      pitch_ = 0;
      roll_ = 0;
+
+     // set_depth_pid_parameters();
 
      manip_state_ = VideoRayComm::Idle;
 }
@@ -392,6 +412,84 @@ VideoRayComm::Status_t VideoRayComm::send_control_command()
      return VideoRayComm::Success;
 }
 
+VideoRayComm::Status_t VideoRayComm::set_depth_pid_parameters()
+{
+     char * packet;
+     int bytes;
+     
+     // Holds data for addresses 0x26 through 0x2D
+     // You should pass the values for these PID variables as parameters
+     // into this function.
+     char data[8];
+     data[AUTO_DEPTH_P_LSB] = 1; // arbitrary data.
+     data[AUTO_DEPTH_P_MSB] = 0; // arbitrary data.
+     data[AUTO_DEPTH_I_LSB] = 0; // arbitrary data.
+     data[AUTO_DEPTH_I_MSB] = 0; // arbitrary data.
+     data[AUTO_DEPTH_D_LSB] = 0; // arbitrary data.
+     data[AUTO_DEPTH_D_MSB] = 0; // arbitrary data.
+     data[AUTO_DEPTH_K_LSB] = 1; // arbitrary data.
+     data[AUTO_DEPTH_K_MSB] = 0; // arbitrary data.
+     
+     // Generate Packet and grab reference to it
+     packetizer_.set_network_id(0x01); // Network ID for videoray
+     packetizer_.set_flags(0x00); // No response expected
+     packetizer_.set_csr_addr(0x26);          
+     
+     packetizer_.set_data(data, 8);
+     bytes = packetizer_.generate_packet(&packet);    
+
+     // You might want to print out the contents of packet at this point and
+     // make sure that all of the bytes look correct as far as the
+     // communication protocol is concerned.
+     
+     // Send the Tx Control packet over the serial line
+     serial_.Write((const void *)packet, bytes);
+     
+     int test = 0;
+     char byte;
+     Packetizer::Status_t status;
+     do {
+          if (serial_.ReadChar(&byte,0) == 1) {
+               status = receiver_.receive_packet(byte);
+          } else {
+               // Did not receive a byte, break out.
+               printf("Error reading byte.\n");
+               break;
+          }       
+          test++;
+          if (test > 100) break;
+     } while(status == Packetizer::In_Progress);
+     
+     //if (status == Packetizer::Success) {
+     //     bytes = receiver_.get_payload(&packet);
+          
+          //for (int x = 0 ; x < bytes ; x++) {
+          //     printf("%x ", (unsigned char)packet[x]);
+          //}
+          //printf("\n");
+          //short temp = 0;
+          //temp = ((short)(packet[HEADING_MSB]) << 8) | packet[HEADING_LSB]; 
+          //heading_ = temp;
+          //
+          //temp = 0;
+          //temp = ((short)(packet[PITCH_MSB]) << 8) | packet[PITCH_LSB]; 
+          //pitch_ = temp;
+          //
+          //temp = 0;
+          //temp = ((short)(packet[ROLL_MSB]) << 8) | packet[ROLL_LSB]; 
+          //roll_ = temp;
+                    
+     //} else {
+     //     printf("Control Command - Decode Error.\n");
+     //     printf("Status: %d\n", status);
+     //     printf("Flushing receiver.\n");
+     //     serial_.FlushReceiver();
+     //}
+     serial_.FlushReceiver();
+     return VideoRayComm::Success;
+}
+
+
 short VideoRayComm::swap_bytes(char *array, int msb, int lsb)
 {
      short temp = 0;
@@ -443,7 +541,7 @@ VideoRayComm::Status_t VideoRayComm::send_nav_data_command()
           //     printf("%x ", (unsigned char)packet[x]);
           //}
           //printf("\n");
-                   
+
           heading_ = swap_bytes(packet, HEADING_MSB, HEADING_LSB) / 10.0;
           pitch_ = swap_bytes(packet, PITCH_MSB, PITCH_LSB) / 10.0;
           roll_ = swap_bytes(packet, ROLL_MSB, ROLL_LSB) / 10.0;
