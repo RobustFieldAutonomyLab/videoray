@@ -1,6 +1,6 @@
 <launch>
   <arg name="sonar" default="true" />
-  <arg name="usbl" default="false" />
+  <arg name="usbl" default="true" />
   <arg name="gui" default="true" />
   <arg name="js" default="true" />
 
