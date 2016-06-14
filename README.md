@@ -14,6 +14,7 @@ catkin_make
 
 source devel/setup.sh
 sudo cp src/videoray_launch/scripts/99-usb-serial.rules /etc/udev/rules.d/
+sudo mkdir -p /var/lib/joystick
 sudo cp src/videoray_launch/scripts/joystick.state /var/lib/joystick
 ```
 
