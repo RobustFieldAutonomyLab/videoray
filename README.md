@@ -13,6 +13,8 @@ cd ..
 catkin_make
 
 source devel/setup.sh
+sudo cp src/videoray_launch/scripts/99-usb-serial.rules /etc/udev/rules.d/
+sudo cp src/videoray_launch/scripts/joystick.state /var/lib/joystick
 ```
 
 # Published Topics
