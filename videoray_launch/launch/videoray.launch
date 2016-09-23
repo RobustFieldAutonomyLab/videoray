@@ -3,11 +3,13 @@
   <arg name="usbl" default="true" />
   <arg name="gui" default="true" />
   <arg name="js" default="true" />
+  <arg name="camera" default="true" />
 
   <include file="$(find videoray_control)/launch/videoray_control.launch"/>
   <include if="$(arg js)" file="$(find videoray_input)/launch/videoray_joystick.launch"/>
   <include if="$(arg usbl)" file="$(find videoray_usbl)/launch/videoray_usbl.launch"/>
   <include if="$(arg sonar)" file="$(find videoray_sonar)/launch/videoray_sonar.launch"/>
+  <include if="$(arg camera)" file="$(find videoray_launch)/launch/videoray_camera.launch"/>
 
   <node if="$(arg gui)" name="videoray_dashboard" pkg="rqt_gui" type="rqt_gui" respawn="false" output="screen" args="--perspective-file $(find videoray_launch)/gui/dashboard.perspective"/>
 </launch>

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+v4l2-ctl -s ntsc --device=1
+
 if [ -e /dev/sonar ]; then
 	echo "Device sonar found"
 	sudo chmod 777 /dev/sonar

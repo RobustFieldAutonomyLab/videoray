@@ -19,6 +19,12 @@ sudo mkdir -p /var/lib/joystick
 sudo cp src/videoray_launch/scripts/joystick.state /var/lib/joystick
 ```
 
+Camera
+
+```
+sudo apt-get install v4l-utils gstreamer0.10 libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev
+```
+
 # Published Topics
 
 1. `/videoray_control/pose`: `geometry_msgs/PoseStamped`
