@@ -32,6 +32,7 @@ sudo apt-get install v4l-utils gstreamer0.10 libgstreamer0.10-dev libgstreamer-p
 3. `/videoray_control/throttle_cmd`: `videoray_control/Throttle`
 4. `/videoray_sonar/sonarscan`: `sensor_msgs/PointCloud2`
 5. `/videoray_usbl/usbl_pose`: `geometry_msgs/PoseStamped`
+6. `/videoray_dvl/rti**`: RTI DVL packets
 
 # Subscribed Topics
 

@@ -18,6 +18,13 @@
 #include "videoray_control/DesiredTrajectory.h"
 #include "videoray_control/Status.h"
 #include "videoray_control/UHRIComm.h"
+#include "videoray_control/RTI01.h"
+#include "videoray_control/RTI02.h"
+#include "videoray_control/RTI03.h"
+#include "videoray_control/RTI30.h"
+#include "videoray_control/RTI31.h"
+#include "videoray_control/RTI32.h"
+#include "videoray_control/RTI33.h"
 
 #include <sstream>
 
@@ -111,13 +118,6 @@ void callback_desired_trajectory(const videoray_control::DesiredTrajectoryConstP
      desired_trajectory_ = *msg;
 }
 
-void callback_rfal_vr_throttle_cmd( const geometry_msgs::Vector3::ConstPtr& throttle_data )
-{
-  star_thrust_ = throttle_data->x; // starboard 
-  port_thrust_ = throttle_data->y; // port
-  vert_thrust_ = throttle_data->z; // vert
-}
-
 videoray_control::UHRIComm uhri_comm_;
 void callback_uhri_comm(const videoray_control::UHRICommConstPtr& msg)
 {
@@ -181,14 +181,21 @@ int main(int argc, char **argv)
      ros::Publisher throttle_pub_ = n_.advertise<videoray_control::Throttle>("throttle_cmd", 1);
      ros::Publisher twist_pub_ = n_.advertise<geometry_msgs::TwistStamped>("accelerations",1);
      ros::Publisher videoray_status_pub_ = n_.advertise<videoray_control::Status>("videoray_status",1);
-   
-     // position-controller-specific topics
-     ros::Publisher rfal_vr_euler_pub = n_.advertise
-       <geometry_msgs::Vector3Stamped>( "rfal_vr_euler" , 1 );
-     ros::Publisher rfal_vr_accel_pub = n_.advertise
-       <geometry_msgs::TwistStamped>( "rfal_vr_accel" , 1 ); 
-     ros::Subscriber rfal_vr_throttle_cmd_sub = n_.subscribe<>
-       ( "/rfal_vr_throttle_cmd" , 1 , callback_rfal_vr_throttle_cmd );
+     ros::Publisher rti01_pub_ = n_.advertise<videoray_control::RTI01>("/videoray_dvl/rti01", 1);
+     ros::Publisher rti02_pub_ = n_.advertise<videoray_control::RTI02>("/videoray_dvl/rti02", 1);
+     ros::Publisher rti03_pub_ = n_.advertise<videoray_control::RTI03>("/videoray_dvl/rti03", 1);
+     ros::Publisher rti30_pub_ = n_.advertise<videoray_control::RTI30>("/videoray_dvl/rti30", 1);
+     ros::Publisher rti31_pub_ = n_.advertise<videoray_control::RTI31>("/videoray_dvl/rti31", 1);
+     ros::Publisher rti32_pub_ = n_.advertise<videoray_control::RTI32>("/videoray_dvl/rti32", 1);
+     ros::Publisher rti33_pub_ = n_.advertise<videoray_control::RTI33>("/videoray_dvl/rti33", 1);
+
+     videoray_control::RTI01 rti01_msg_;
+     videoray_control::RTI02 rti02_msg_;
+     videoray_control::RTI03 rti03_msg_;
+     videoray_control::RTI30 rti30_msg_;
+     videoray_control::RTI31 rti31_msg_;
+     videoray_control::RTI32 rti32_msg_;
+     videoray_control::RTI33 rti33_msg_;
 
      geometry_msgs::PoseStamped pose_stamped_;
      geometry_msgs::TwistStamped twist_stamped_;
@@ -512,33 +519,6 @@ int main(int argc, char **argv)
 
           twist_pub_.publish(twist_stamped_);
 
-	  //
-	  // position-controller-specific topics
-	  //
-	  geometry_msgs::Vector3Stamped rfal_vr_euler;
-	  rfal_vr_euler.header.seq = 0;
-	  rfal_vr_euler.header.stamp = ros::Time( ).now( );
-	  rfal_vr_euler.header.frame_id = "rfal_vr";
-
-	  rfal_vr_euler.vector.x = comm.roll( );
-	  rfal_vr_euler.vector.y = comm.pitch( );
-	  rfal_vr_euler.vector.z = comm.heading( );
-    rfal_vr_euler_pub.publish( rfal_vr_euler );
-
-	  geometry_msgs::TwistStamped rfal_vr_accel;
-	  rfal_vr_accel.header.seq = 0;
-	  rfal_vr_accel.header.stamp = ros::Time( ).now( );
-	  rfal_vr_accel.header.frame_id = "rfal_vr";
-	  
-	  rfal_vr_accel.twist.linear.x = comm.surge_accel( );
-	  rfal_vr_accel.twist.linear.y = comm.sway_accel( );
-	  rfal_vr_accel.twist.linear.z = comm.heave_accel( );
-	   
-	  rfal_vr_accel.twist.angular.x = comm.roll_accel( );
-	  rfal_vr_accel.twist.angular.y = comm.pitch_accel( );
-	  rfal_vr_accel.twist.angular.z = comm.yaw_accel( );
-	  rfal_vr_accel_pub.publish( rfal_vr_accel );
-
           status = comm.request_status();
           if (status != VideoRayComm::Success) {
               cout << "Exec Transfer Error!" << endl;
@@ -549,6 +529,104 @@ int main(int argc, char **argv)
           videoray_status_.voltage_12V = comm.rov_voltage();
 
           videoray_status_pub_.publish(videoray_status_);
+
+          status = comm.request_dvl_status();
+          if (status != VideoRayComm::Success) {
+              cout << "DVL Transfer Error!" << endl;
+          }
+
+          const VideoRayComm::RTI01 &rti01 = comm.rti01();
+          if (rti01.ready) {
+            rti01_msg_.header.stamp = ros::Time().now();
+            rti01_msg_.sample_time = rti01.sample_time;
+            rti01_msg_.sample_num = rti01.sample_num;
+            rti01_msg_.temperature = rti01.temperature;
+            rti01_msg_.bottom_track_velocity.x = rti01.bottom_track_x;
+            rti01_msg_.bottom_track_velocity.y = rti01.bottom_track_y;
+            rti01_msg_.bottom_track_velocity.z = rti01.bottom_track_z;
+            rti01_msg_.bottom_track_depth = rti01.bottom_track_depth;
+            rti01_msg_.water_mass_velocity.x = rti01.water_mass_x;
+            rti01_msg_.water_mass_velocity.y = rti01.water_mass_y;
+            rti01_msg_.water_mass_velocity.z = rti01.water_mass_z;
+            rti01_msg_.water_mass_depth = rti01.water_mass_depth;
+            rti01_pub_.publish(rti01_msg_);
+          }
+
+          const VideoRayComm::RTI02 &rti02 = comm.rti02();
+          if (rti02.ready) {
+            rti02_msg_.header.stamp = ros::Time().now();
+            rti02_msg_.sample_time = rti02.sample_time;
+            rti02_msg_.sample_num = rti02.sample_num;
+            rti02_msg_.temperature = rti02.temperature;
+            rti02_msg_.bottom_track_velocity.x = rti02.bottom_track_x;
+            rti02_msg_.bottom_track_velocity.y = rti02.bottom_track_y;
+            rti02_msg_.bottom_track_velocity.z = rti02.bottom_track_z;
+            rti02_msg_.bottom_track_depth = rti02.bottom_track_depth;
+            rti02_msg_.water_mass_velocity.x = rti02.water_mass_x;
+            rti02_msg_.water_mass_velocity.y = rti02.water_mass_y;
+            rti02_msg_.water_mass_velocity.z = rti02.water_mass_z;
+            rti02_msg_.water_mass_depth = rti02.water_mass_depth;
+            rti02_pub_.publish(rti02_msg_);
+          }
+
+          const VideoRayComm::RTI03 &rti03 = comm.rti03();
+          if (rti03.ready) {
+            rti03_msg_.header.stamp = ros::Time().now();
+            rti03_msg_.sample_time = rti03.sample_time;
+            rti03_msg_.sample_num = rti03.sample_num;
+            rti03_msg_.temperature = rti03.temperature;
+            rti03_msg_.bottom_track_x = rti03.bottom_track_x;
+            rti03_msg_.bottom_track_y = rti03.bottom_track_y;
+            rti03_msg_.bottom_track_z = rti03.bottom_track_z;
+            rti03_msg_.bottom_track_q = rti03.bottom_track_q;
+            rti03_msg_.bottom_track_depth = rti03.bottom_track_depth;
+            rti03_msg_.water_mass_x = rti03.water_mass_x;
+            rti03_msg_.water_mass_y = rti03.water_mass_y;
+            rti03_msg_.water_mass_z = rti03.water_mass_z;
+            rti03_msg_.water_mass_q = rti03.water_mass_q;
+            rti03_msg_.water_mass_depth = rti03.water_mass_depth;
+            rti03_pub_.publish(rti03_msg_);
+          }
+
+          const VideoRayComm::RTI30 &rti30 = comm.rti30();
+          if (rti30.ready) {
+            rti30_msg_.header.stamp = ros::Time().now();
+            rti30_msg_.orientation.x = rti30.heading;
+            rti30_msg_.orientation.y = rti30.pitch;
+            rti30_msg_.orientation.z = rti30.roll;
+            rti30_pub_.publish(rti30_msg_);
+          }
+
+          const VideoRayComm::RTI31 &rti31 = comm.rti31();
+          if (rti31.ready) {
+            rti31_msg_.header.stamp = ros::Time().now();
+            rti31_msg_.orientation.x = rti31.heading;
+            rti31_msg_.orientation.y = rti31.pitch;
+            rti31_msg_.orientation.z = rti31.roll;
+            rti31_pub_.publish(rti31_msg_);
+          }
+
+          const VideoRayComm::RTI32 &rti32 = comm.rti32();
+          if (rti32.ready) {
+            rti32_msg_.header.stamp = ros::Time().now();
+            rti32_msg_.orientation.x = rti32.heading;
+            rti32_msg_.orientation.y = rti32.pitch;
+            rti32_msg_.orientation.z = rti32.roll;
+            rti32_msg_.pressure = rti32.pressure;
+            rti32_msg_.temperature = rti32.temperature;
+            rti32_pub_.publish(rti32_msg_);
+          }
+
+          const VideoRayComm::RTI33 &rti33 = comm.rti33();
+          if (rti33.ready) {
+            rti33_msg_.header.stamp = ros::Time().now();
+            rti33_msg_.orientation.x = rti33.heading;
+            rti33_msg_.orientation.y = rti33.pitch;
+            rti33_msg_.orientation.z = rti33.roll;
+            rti33_msg_.pressure = rti33.pressure;
+            rti33_msg_.temperature = rti33.temperature;
+            rti33_pub_.publish(rti33_msg_);
+          }
 
           //cout << "------------------------------------" << endl;
           //cout << "Heading: " << comm.heading() << endl;

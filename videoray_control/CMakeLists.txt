@@ -21,12 +21,20 @@ add_message_files(
   AccessoryControl.msg
   Status.msg
   UHRIComm.msg
+  RTI01.msg
+  RTI02.msg
+  RTI03.msg
+  RTI30.msg
+  RTI31.msg
+  RTI32.msg
+  RTI33.msg
 )
 
 # Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 catkin_package(

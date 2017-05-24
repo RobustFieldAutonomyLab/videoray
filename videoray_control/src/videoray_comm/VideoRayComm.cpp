@@ -1,5 +1,7 @@
 #include <iostream>
 #include <stdio.h>
+#include <algorithm>
+#include <sstream>
 
 #include "videoray_comm/VideoRayComm.h"
 
@@ -611,6 +613,187 @@ VideoRayComm::Status_t VideoRayComm::request_status()
           serial_.FlushReceiver();
      }
      return VideoRayComm::Success;
+}
+
+VideoRayComm::Status_t VideoRayComm::request_dvl_status()
+{
+     rti01_.ready = false;
+     rti02_.ready = false;
+     rti03_.ready = false;
+     rti30_.ready = false;
+     rti31_.ready = false;
+     rti32_.ready = false;
+     rti33_.ready = false;
+
+     char * packet;
+     int bytes;
+
+     packetizer_.set_network_id(0x0A);
+     packetizer_.set_flags(0x00); // Ignored
+     packetizer_.set_csr_addr(0xF0);
+     packetizer_.set_data(tx_ctrl_data, 0);
+
+     bytes = packetizer_.generate_packet(&packet);
+     
+     // Send the Tx Control packet over the serial line
+     serial_.Write((const void *)packet, bytes);
+     
+     char byte;
+     Packetizer::Status_t status;
+     do {
+          if (serial_.ReadChar(&byte,0) == 1) {
+               status = receiver_.receive_packet(byte);
+          } else {
+               // Did not receive a byte, break out.
+               printf("Error reading byte.\n");
+               break;
+          }
+     } while(status == Packetizer::In_Progress);
+     
+     if (status == Packetizer::Success) {
+          bytes = receiver_.get_payload(&packet);
+          for (int x = 0 ; x < bytes ; x++) {
+               if (packet[x] == 16 || packet[x] == '\r' || packet[x] == 0)
+                    continue;
+               dvl_buff_.push_back(packet[x]);
+          }
+
+          while (true) {
+               std::vector<char>::iterator end = std::find(dvl_buff_.begin(), dvl_buff_.end(), '\n');
+               if (end == dvl_buff_.end())
+                    break;
+
+               std::string str(dvl_buff_.begin(), end);
+               parse_rti_dvl_data(str);
+               dvl_buff_.erase(dvl_buff_.begin(), end + 1);
+          }
+      } else {
+          printf("DVL Status - Decode Error.\n");
+          printf("Status: %d\n", status);
+          printf("Flushing receiver.\n");
+          serial_.FlushReceiver();
+     }
+     return VideoRayComm::Success;
+}
+
+void VideoRayComm::parse_rti_dvl_data(const std::string &str) {
+     if (str[0] != '$') {
+          std::cout << "Packet doesn't start with $: " << int(str[0]) << ", " << str << std::endl;
+          return;
+     }
+
+    std::stringstream ss;
+    ss.str(str);
+    std::string field;
+    std::vector<std::string> data_fields;
+    while (std::getline(ss, field, ',')) {
+         data_fields.push_back(field);
+    }
+
+    int rti = std::atoi(str.c_str() + 5);
+    switch (rti) {
+     case 01:
+          if (data_fields.size() != 15) {
+               std::cout << "Number of data fields error: " << str << std::endl;
+               return;
+          }
+          rti01_.sample_time = std::atoi(data_fields[1].c_str()) / 100.0;
+          rti01_.sample_num = std::atoi(data_fields[2].c_str());
+          rti01_.temperature = std::atoi(data_fields[3].c_str()) / 100.0;
+          rti01_.bottom_track_x = std::atoi(data_fields[4].c_str()) / 1000.0;
+          rti01_.bottom_track_y = std::atoi(data_fields[5].c_str()) / 1000.0;
+          rti01_.bottom_track_z = std::atoi(data_fields[6].c_str()) / 1000.0;
+          rti01_.bottom_track_depth = std::atoi(data_fields[7].c_str()) / 1000.0;
+          rti01_.water_mass_x = std::atoi(data_fields[8].c_str()) / 1000.0;
+          rti01_.water_mass_y = std::atoi(data_fields[9].c_str()) / 1000.0;
+          rti01_.water_mass_z = std::atoi(data_fields[10].c_str()) / 1000.0;
+          rti01_.water_mass_depth = std::atoi(data_fields[11].c_str()) / 1000.0;
+          rti01_.ready = true;
+          // rti01_.print();
+          break;
+     case 02:
+          if (data_fields.size() != 15) {
+               std::cout << "Number of data fields error: " << str << std::endl;
+               return;
+          }
+          rti02_.sample_time = std::atoi(data_fields[1].c_str()) / 100.0;
+          rti02_.sample_num = std::atoi(data_fields[2].c_str());
+          rti02_.temperature = std::atoi(data_fields[3].c_str()) / 100.0;
+          rti02_.bottom_track_x = std::atoi(data_fields[4].c_str()) / 1000.0;
+          rti02_.bottom_track_y = std::atoi(data_fields[5].c_str()) / 1000.0;
+          rti02_.bottom_track_z = std::atoi(data_fields[6].c_str()) / 1000.0;
+          rti02_.bottom_track_depth = std::atoi(data_fields[7].c_str()) / 1000.0;
+          rti02_.water_mass_x = std::atoi(data_fields[8].c_str()) / 1000.0;
+          rti02_.water_mass_y = std::atoi(data_fields[9].c_str()) / 1000.0;
+          rti02_.water_mass_z = std::atoi(data_fields[10].c_str()) / 1000.0;
+          rti02_.water_mass_depth = std::atoi(data_fields[11].c_str()) / 1000.0;
+          rti02_.ready = true;
+          break;
+     case 03:
+          if (data_fields.size() != 17) {
+               std::cout << "Number of data fields error: " << str << std::endl;
+               return;
+          }
+          rti03_.sample_time = std::atoi(data_fields[1].c_str()) / 100.0;
+          rti03_.sample_num = std::atoi(data_fields[2].c_str());
+          rti03_.temperature = std::atoi(data_fields[3].c_str()) / 100.0;
+          rti03_.bottom_track_x = std::atoi(data_fields[4].c_str()) / 1000.0;
+          rti03_.bottom_track_y = std::atoi(data_fields[5].c_str()) / 1000.0;
+          rti03_.bottom_track_z = std::atoi(data_fields[6].c_str()) / 1000.0;
+          rti03_.bottom_track_q = std::atoi(data_fields[7].c_str()) / 1000.0;
+          rti03_.bottom_track_depth = std::atoi(data_fields[8].c_str()) / 1000.0;
+          rti03_.water_mass_x = std::atoi(data_fields[9].c_str()) / 1000.0;
+          rti03_.water_mass_y = std::atoi(data_fields[10].c_str()) / 1000.0;
+          rti03_.water_mass_z = std::atoi(data_fields[11].c_str()) / 1000.0;
+          rti03_.water_mass_q = std::atoi(data_fields[12].c_str()) / 1000.0;
+          rti03_.water_mass_depth = std::atoi(data_fields[13].c_str()) / 1000.0;
+          rti03_.ready = true;
+          break;
+     case 30:
+          if (data_fields.size() != 6) {
+               std::cout << "Number of data fields error: " << str << std::endl;
+               return;
+          }
+          rti30_.heading = std::atof(data_fields[1].c_str());
+          rti30_.pitch = std::atof(data_fields[2].c_str());
+          rti30_.roll = std::atof(data_fields[3].c_str());
+          rti30_.ready = true;
+          break;
+     case 31:
+          if (data_fields.size() != 6) {
+               std::cout << "Number of data fields error: " << str << std::endl;
+               return;
+          }
+          rti31_.heading = std::atof(data_fields[1].c_str());
+          rti31_.pitch = std::atof(data_fields[2].c_str());
+          rti31_.roll = std::atof(data_fields[3].c_str());
+          rti31_.ready = true;
+          break;
+     case 32:
+          if (data_fields.size() != 8) {
+               std::cout << "Number of data fields error: " << str << std::endl;
+               return;
+          }
+          rti32_.heading = std::atof(data_fields[1].c_str());
+          rti32_.pitch = std::atof(data_fields[2].c_str());
+          rti32_.roll = std::atof(data_fields[3].c_str());
+          rti33_.pressure = std::atof(data_fields[4].c_str());
+          rti33_.temperature = std::atof(data_fields[5].c_str());
+          rti32_.ready = true;
+          break;
+     case 33:
+          if (data_fields.size() != 8) {
+               std::cout << "Number of data fields error: " << str << std::endl;
+               return;
+          }
+          rti33_.heading = std::atof(data_fields[1].c_str());
+          rti33_.pitch = std::atof(data_fields[2].c_str());
+          rti33_.roll = std::atof(data_fields[3].c_str());
+          rti33_.pressure = std::atof(data_fields[4].c_str());
+          rti33_.temperature = std::atof(data_fields[5].c_str());
+          rti33_.ready = true;
+          break;
+    }
 }
 
 double VideoRayComm::heading()
