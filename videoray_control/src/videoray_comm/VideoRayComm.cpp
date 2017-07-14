@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <algorithm>
 #include <sstream>
+#include <math.h>
+#include <opencv2/opencv.hpp>
+
 
 #include "videoray_comm/VideoRayComm.h"
 
@@ -35,14 +38,8 @@
 #define AUTO_DEPTH_K_LSB 44
 #define AUTO_DEPTH_K_MSB 45
 
-#define AUTO_HEADING_P_LSB 46
-#define AUTO_HEADING_P_LSB 47
-#define AUTO_HEADING_I_LSB 48
-#define AUTO_HEADING_I_LSB 49
-#define AUTO_HEADING_D_LSB 50
-#define AUTO_HEADING_D_LSB 51
-#define AUTO_HEADING_K_LSB 52
-#define AUTO_HEADING_K_LSB 53
+// removed defines taht weren't used AUTO_HEADING_P/I/D/K_LSB
+
 
 ////////////////////////////////
 //// RX Control Packet Defines
@@ -624,6 +621,8 @@ VideoRayComm::Status_t VideoRayComm::request_dvl_status()
      rti31_.ready = false;
      rti32_.ready = false;
      rti33_.ready = false;
+     pose_data.ready = false;
+     orientation_data.ready = false;
 
      char * packet;
      int bytes;
@@ -700,9 +699,9 @@ void VideoRayComm::parse_rti_dvl_data(const std::string &str) {
           rti01_.sample_time = std::atoi(data_fields[1].c_str()) / 100.0;
           rti01_.sample_num = std::atoi(data_fields[2].c_str());
           rti01_.temperature = std::atoi(data_fields[3].c_str()) / 100.0;
-          rti01_.bottom_track_x = std::atoi(data_fields[4].c_str()) / 1000.0;
-          rti01_.bottom_track_y = std::atoi(data_fields[5].c_str()) / 1000.0;
-          rti01_.bottom_track_z = std::atoi(data_fields[6].c_str()) / 1000.0;
+          rti01_.vector_x = std::atoi(data_fields[4].c_str()) / 1000.0;
+          rti01_.vector_y = std::atoi(data_fields[5].c_str()) / 1000.0;
+          rti01_.vector_z = std::atoi(data_fields[6].c_str()) / 1000.0;
           rti01_.bottom_track_depth = std::atoi(data_fields[7].c_str()) / 1000.0;
           rti01_.water_mass_x = std::atoi(data_fields[8].c_str()) / 1000.0;
           rti01_.water_mass_y = std::atoi(data_fields[9].c_str()) / 1000.0;
@@ -774,9 +773,9 @@ void VideoRayComm::parse_rti_dvl_data(const std::string &str) {
                std::cout << "Number of data fields error: " << str << std::endl;
                return;
           }
-          rti32_.heading = std::atof(data_fields[1].c_str());
-          rti32_.pitch = std::atof(data_fields[2].c_str());
-          rti32_.roll = std::atof(data_fields[3].c_str());
+          rti32_.vector_x = std::atof(data_fields[1].c_str()); //heading
+          rti32_.vector_y = std::atof(data_fields[2].c_str()); //pitch
+          rti32_.vector_z = std::atof(data_fields[3].c_str()); //roll
           rti33_.pressure = std::atof(data_fields[4].c_str());
           rti33_.temperature = std::atof(data_fields[5].c_str());
           rti32_.ready = true;
@@ -794,6 +793,7 @@ void VideoRayComm::parse_rti_dvl_data(const std::string &str) {
           rti33_.ready = true;
           break;
     }
+
 }
 
 double VideoRayComm::heading()

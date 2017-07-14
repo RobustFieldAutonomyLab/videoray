@@ -25,6 +25,11 @@
 #include "videoray_control/RTI31.h"
 #include "videoray_control/RTI32.h"
 #include "videoray_control/RTI33.h"
+#include "videoray_control/DVL_POSE_DATA.h"
+#include "videoray_control/DVL_ORIENTATION_DATA.h"
+
+
+#include <opencv2/opencv.hpp>
 
 #include <sstream>
 
@@ -43,6 +48,54 @@ bool joystick_cmd_enabled_ = true;
 int vert_thrust_ = 0;
 int port_thrust_ = 0;
 int star_thrust_ = 0;
+float mult [3][3];
+// Calculates rotation matrix given euler angles.
+void rot2euler(float theta[3])
+{
+    // Calculate rotation about x axis
+    float R_x [3][3] = 
+	{
+               {1,       0,              0},
+               {0,       cos(theta[0]),   -sin(theta[0])},
+               {0,       sin(theta[0]),   cos(theta[0])}
+        };
+     
+    // Calculate rotation about y axis
+    float R_y [3][3] =
+	{
+               {cos(theta[1]),    0,      sin(theta[1])},
+               {0,               1,      0},
+               {-sin(theta[1]),   0,      cos(theta[1])}
+	};
+               
+     
+    // Calculate rotation about z axis
+    float R_z [3][3] =
+	{
+               {cos(theta[2]),    -sin(theta[2]),      0},
+               {sin(theta[2]),    cos(theta[2]),       0},
+               {0,               0,                  1}
+   	};
+     
+    // Combined rotation matrix
+
+for(int i = 0; i < 3; ++i)
+        for(int j = 0; j < 3; ++j)
+        {
+            mult[i][j]=0;
+        }
+
+    // Multiplying matrix a and b and storing in array mult.
+    for(int i = 0; i < 3; ++i)
+        for(int j = 0; j < 3; ++j)
+            for(int k = 0; k < 3; ++k)
+            {
+                mult[i][j] = R_x[i][k] * R_y[i][k] + R_x[i][k]*R_z[i][k] + R_y[i][k]+R_z[i][k];
+            }
+     
+    return;
+ 
+}
 
 ros::Subscriber throttle_sub_;
 void callback_throttle(const videoray_control::Throttle& msg)
@@ -188,6 +241,8 @@ int main(int argc, char **argv)
      ros::Publisher rti31_pub_ = n_.advertise<videoray_control::RTI31>("/videoray_dvl/rti31", 1);
      ros::Publisher rti32_pub_ = n_.advertise<videoray_control::RTI32>("/videoray_dvl/rti32", 1);
      ros::Publisher rti33_pub_ = n_.advertise<videoray_control::RTI33>("/videoray_dvl/rti33", 1);
+     ros::Publisher pose_data_pub_ = n_.advertise<videoray_control::DVL_POSE_DATA>("/videoray_dvl/pose_data", 1);
+     ros::Publisher orientation_data_pub_ = n_.advertise<videoray_control::DVL_ORIENTATION_DATA>("/videoray_dvl/orientation_data", 1);
 
      videoray_control::RTI01 rti01_msg_;
      videoray_control::RTI02 rti02_msg_;
@@ -196,6 +251,8 @@ int main(int argc, char **argv)
      videoray_control::RTI31 rti31_msg_;
      videoray_control::RTI32 rti32_msg_;
      videoray_control::RTI33 rti33_msg_;
+     videoray_control::DVL_POSE_DATA pose_data_msg_;
+     videoray_control::DVL_ORIENTATION_DATA dvl_orientation_data_msg;
 
      geometry_msgs::PoseStamped pose_stamped_;
      geometry_msgs::TwistStamped twist_stamped_;
@@ -541,9 +598,9 @@ int main(int argc, char **argv)
             rti01_msg_.sample_time = rti01.sample_time;
             rti01_msg_.sample_num = rti01.sample_num;
             rti01_msg_.temperature = rti01.temperature;
-            rti01_msg_.bottom_track_velocity.x = rti01.bottom_track_x;
-            rti01_msg_.bottom_track_velocity.y = rti01.bottom_track_y;
-            rti01_msg_.bottom_track_velocity.z = rti01.bottom_track_z;
+            rti01_msg_.bottom_track_velocity.x = rti01.vector_x;
+            rti01_msg_.bottom_track_velocity.y = rti01.vector_y;
+            rti01_msg_.bottom_track_velocity.z = rti01.vector_z;
             rti01_msg_.bottom_track_depth = rti01.bottom_track_depth;
             rti01_msg_.water_mass_velocity.x = rti01.water_mass_x;
             rti01_msg_.water_mass_velocity.y = rti01.water_mass_y;
@@ -609,9 +666,9 @@ int main(int argc, char **argv)
           const VideoRayComm::RTI32 &rti32 = comm.rti32();
           if (rti32.ready) {
             rti32_msg_.header.stamp = ros::Time().now();
-            rti32_msg_.orientation.x = rti32.heading;
-            rti32_msg_.orientation.y = rti32.pitch;
-            rti32_msg_.orientation.z = rti32.roll;
+            rti32_msg_.orientation.x = rti32.vector_x;
+            rti32_msg_.orientation.y = rti32.vector_y;
+            rti32_msg_.orientation.z = rti32.vector_z;
             rti32_msg_.pressure = rti32.pressure;
             rti32_msg_.temperature = rti32.temperature;
             rti32_pub_.publish(rti32_msg_);
@@ -627,6 +684,29 @@ int main(int argc, char **argv)
             rti33_msg_.temperature = rti33.temperature;
             rti33_pub_.publish(rti33_msg_);
           }
+	  const VideoRayComm::DVL_POSE_DATA &pose_data = comm.pose_data_f();
+	  if (pose_data.ready) {
+	   
+ 	   double dt = (ros::Time().now().toSec() - pose_data_msg_.header.stamp.toSec());
+	   pose_data_msg_.header.stamp = ros::Time().now();
+	   float temproll =comm.roll();
+	   float temppitch = comm.pitch();
+	   float tempheading = comm.heading();
+	   float temparray [3] = {temproll, temppitch, tempheading};
+	   rot2euler({temparray});
+	   float raw_velocities[3] = {rti01.vector_x, rti01.vector_y, rti01.vector_z};
+	   float transform_velocities [3] ={0};
+	   for(int i = 0; i < 3; ++i)
+            		for(int j = 0; j < 3; ++j)
+            			{
+               			 transform_velocities[i] += raw_velocities[j]*mult[j][i] ;
+            			}
+
+	   pose_data_msg_.orientation.x += transform_velocities[0]*dt;	//actually pose not orientation
+	   pose_data_msg_.orientation.y += transform_velocities[1]*dt;	//actually pose not orientation
+	   pose_data_msg_.orientation.z += transform_velocities[2]*dt;	//actually pose not orientation
+	   pose_data_pub_.publish(pose_data_msg_);	
+	  }
 
           //cout << "------------------------------------" << endl;
           //cout << "Heading: " << comm.heading() << endl;

@@ -75,9 +75,9 @@ public:
           float sample_time;
           int sample_num;
           float temperature;
-          float bottom_track_x;
-          float bottom_track_y;
-          float bottom_track_z;
+          float vector_x;
+          float vector_y;
+          float vector_z;
           float bottom_track_depth;
           float water_mass_x;
           float water_mass_y;
@@ -140,9 +140,9 @@ public:
      };
 
      struct RTI32 {
-          float heading;
-          float pitch;
-          float roll;
+          float vector_x;//heading;
+          float vector_y;//pitch;
+          float vector_z;//roll;
           float pressure;
           float temperature;
           bool ready;
@@ -155,6 +155,18 @@ public:
           float pressure;
           float temperature;
           bool ready;
+     };
+     struct DVL_POSE_DATA {
+	  float pose_x;
+  	  float pose_y;
+	  float pose_z;
+	  bool ready;
+     };
+     struct DVL_ORIENTATION_DATA {
+	  float vector_x;
+  	  float vector_y;
+	  float vector_z;
+	  bool ready;
      };
 
      VideoRayComm(std::string port="/dev/ttyUSB0");
@@ -202,6 +214,8 @@ public:
      const RTI31& rti31() const { return rti31_; }
      const RTI32& rti32() const { return rti32_; }
      const RTI33& rti33() const { return rti33_; }
+     const DVL_POSE_DATA& pose_data_f() const { return pose_data;}
+     const DVL_ORIENTATION_DATA& orientation_data_f() const { return orientation_data;}
 
      Status_t set_cam_cmd(CamCtrl_t cam_ctrl);
 
@@ -231,6 +245,8 @@ private:
      RTI31 rti31_;
      RTI32 rti32_;
      RTI33 rti33_;
+     DVL_POSE_DATA pose_data;
+     DVL_ORIENTATION_DATA orientation_data;
 
      char tx_ctrl_data[15];
      //char tx_sensor_data[7];
