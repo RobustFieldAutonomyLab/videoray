@@ -40,3 +40,8 @@ sudo apt-get install v4l-utils gstreamer0.10 libgstreamer0.10-dev libgstreamer-p
 2. `/videoray_input/throttle`: `videoray_control/Throttle`
 3. `/videoray_input/desired_trajectory`: `videoray_control/DesiredTrajectory`
 4. `/videoray_sonar/valid` `std_msgs/Bool`
+
+# Launch
+
+1. Change permissions `sudo rosrun videoray_launch check_dev.sh`.
+2. Launch VideoRay `roslaunch videoray_launch videoray.launch`. Disable accessories as needed by `sonar:=false js:=false usbl:=false camera:=false`. If you don't disable accessories that are not connected, the program will crash because it can't find the corresponding ports.
