@@ -25,8 +25,6 @@
 #include "videoray_control/RTI31.h"
 #include "videoray_control/RTI32.h"
 #include "videoray_control/RTI33.h"
-#include "videoray_control/DVL_POSE_DATA.h"
-#include "videoray_control/DVL_ORIENTATION_DATA.h"
 
 
 #include <opencv2/opencv.hpp>
@@ -48,54 +46,6 @@ bool joystick_cmd_enabled_ = true;
 int vert_thrust_ = 0;
 int port_thrust_ = 0;
 int star_thrust_ = 0;
-float mult [3][3];
-// Calculates rotation matrix given euler angles.
-void rot2euler(float theta[3])
-{
-    // Calculate rotation about x axis
-    float R_x [3][3] = 
-	{
-               {1,       0,              0},
-               {0,       cos(theta[0]),   -sin(theta[0])},
-               {0,       sin(theta[0]),   cos(theta[0])}
-        };
-     
-    // Calculate rotation about y axis
-    float R_y [3][3] =
-	{
-               {cos(theta[1]),    0,      sin(theta[1])},
-               {0,               1,      0},
-               {-sin(theta[1]),   0,      cos(theta[1])}
-	};
-               
-     
-    // Calculate rotation about z axis
-    float R_z [3][3] =
-	{
-               {cos(theta[2]),    -sin(theta[2]),      0},
-               {sin(theta[2]),    cos(theta[2]),       0},
-               {0,               0,                  1}
-   	};
-     
-    // Combined rotation matrix
-
-for(int i = 0; i < 3; ++i)
-        for(int j = 0; j < 3; ++j)
-        {
-            mult[i][j]=0;
-        }
-
-    // Multiplying matrix a and b and storing in array mult.
-    for(int i = 0; i < 3; ++i)
-        for(int j = 0; j < 3; ++j)
-            for(int k = 0; k < 3; ++k)
-            {
-                mult[i][j] = R_x[i][k] * R_y[i][k] + R_x[i][k]*R_z[i][k] + R_y[i][k]+R_z[i][k];
-            }
-     
-    return;
- 
-}
 
 ros::Subscriber throttle_sub_;
 void callback_throttle(const videoray_control::Throttle& msg)
@@ -241,8 +191,8 @@ int main(int argc, char **argv)
      ros::Publisher rti31_pub_ = n_.advertise<videoray_control::RTI31>("/videoray_dvl/rti31", 1);
      ros::Publisher rti32_pub_ = n_.advertise<videoray_control::RTI32>("/videoray_dvl/rti32", 1);
      ros::Publisher rti33_pub_ = n_.advertise<videoray_control::RTI33>("/videoray_dvl/rti33", 1);
-     ros::Publisher pose_data_pub_ = n_.advertise<videoray_control::DVL_POSE_DATA>("/videoray_dvl/pose_data", 1);
-     ros::Publisher orientation_data_pub_ = n_.advertise<videoray_control::DVL_ORIENTATION_DATA>("/videoray_dvl/orientation_data", 1);
+     ros::Publisher rfal_dvl_vel_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("/videoray_dvl/rfal_dvl_vel", 1);
+     ros::Publisher orientation_data_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("/videoray_dvl/orientation_data", 1);
 
      videoray_control::RTI01 rti01_msg_;
      videoray_control::RTI02 rti02_msg_;
@@ -251,9 +201,12 @@ int main(int argc, char **argv)
      videoray_control::RTI31 rti31_msg_;
      videoray_control::RTI32 rti32_msg_;
      videoray_control::RTI33 rti33_msg_;
-     videoray_control::DVL_POSE_DATA pose_data_msg_;
-     videoray_control::DVL_ORIENTATION_DATA dvl_orientation_data_msg;
-
+     geometry_msgs::Vector3Stamped rfal_dvl_vel_msg;
+     rfal_dvl_vel_msg.header.stamp = ros::Time().now();
+     rfal_dvl_vel_msg.vector.x = 0.0;
+     rfal_dvl_vel_msg.vector.y = 0.0;
+     rfal_dvl_vel_msg.vector.z = 0.0;
+     geometry_msgs::Vector3Stamped dvl_orientation_data_msg;
      geometry_msgs::PoseStamped pose_stamped_;
      geometry_msgs::TwistStamped twist_stamped_;
 
@@ -580,7 +533,7 @@ int main(int argc, char **argv)
           if (status != VideoRayComm::Success) {
               cout << "Exec Transfer Error!" << endl;
           }
-
+	
           videoray_status_.internal_relative_humidity = comm.humidity();
           videoray_status_.water_temp = comm.water_temperature();
           videoray_status_.voltage_12V = comm.rov_voltage();
@@ -623,7 +576,7 @@ int main(int argc, char **argv)
             rti02_msg_.water_mass_velocity.y = rti02.water_mass_y;
             rti02_msg_.water_mass_velocity.z = rti02.water_mass_z;
             rti02_msg_.water_mass_depth = rti02.water_mass_depth;
-            rti02_pub_.publish(rti02_msg_);
+            rti02_pub_.publish(rti02_msg_);  
           }
 
           const VideoRayComm::RTI03 &rti03 = comm.rti03();
@@ -684,28 +637,27 @@ int main(int argc, char **argv)
             rti33_msg_.temperature = rti33.temperature;
             rti33_pub_.publish(rti33_msg_);
           }
-	  const VideoRayComm::DVL_POSE_DATA &pose_data = comm.pose_data_f();
-	  if (pose_data.ready) {
-	   
- 	   double dt = (ros::Time().now().toSec() - pose_data_msg_.header.stamp.toSec());
-	   pose_data_msg_.header.stamp = ros::Time().now();
-	   float temproll =comm.roll();
-	   float temppitch = comm.pitch();
-	   float tempheading = comm.heading();
-	   float temparray [3] = {temproll, temppitch, tempheading};
-	   rot2euler({temparray});
-	   float raw_velocities[3] = {rti01.vector_x, rti01.vector_y, rti01.vector_z};
-	   float transform_velocities [3] ={0};
-	   for(int i = 0; i < 3; ++i)
-            		for(int j = 0; j < 3; ++j)
-            			{
-               			 transform_velocities[i] += raw_velocities[j]*mult[j][i] ;
-            			}
 
-	   pose_data_msg_.orientation.x += transform_velocities[0]*dt;	//actually pose not orientation
-	   pose_data_msg_.orientation.y += transform_velocities[1]*dt;	//actually pose not orientation
-	   pose_data_msg_.orientation.z += transform_velocities[2]*dt;	//actually pose not orientation
-	   pose_data_pub_.publish(pose_data_msg_);	
+	  // output inertial velocity
+	  if( rti01.ready || rti02.ready || rti03.ready )
+	  {
+	   // compute the transformation
+           double q[4] = { (double) quat.x, 
+			   (double) quat.y,
+			   (double) quat.z,
+			   (double) quat.w }; 
+	   double v_body[3] = { (double) rti01.vector_x, 
+				(double) rti01.vector_y, 
+				(double) rti01.vector_z };
+	   double v_inert[3] = { 0.0 , 0.0 , 0.0 };
+	   rfal_quaternion_from_body_to_inertial( v_inert , v_body , q );
+
+	   // populating the inertial velocity
+     	   rfal_dvl_vel_msg.header.stamp = ros::Time().now();
+     	   rfal_dvl_vel_msg.vector.x = v_inert[0];
+     	   rfal_dvl_vel_msg.vector.y = v_inert[1];
+     	   rfal_dvl_vel_msg.vector.z = v_inert[2];
+	   rfal_dvl_vel_pub_.publish( rfal_dvl_vel_msg );
 	  }
 
           //cout << "------------------------------------" << endl;

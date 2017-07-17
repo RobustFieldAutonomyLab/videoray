@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include "syllo_common/Orientation.h"
+#define SQ( x ) ( ( x ) * ( x ) )
 
 using std::cout;
 using std::endl;
@@ -60,4 +61,64 @@ void eulerToQuaternion_xyzw_deg(const double &roll, const double &pitch,
 {
      eulerToQuaternion_q(roll*syllo::PI/180, pitch*syllo::PI/180, 
                          yaw*syllo::PI/180, w, x, y, z);     
+}
+
+/**
+ * rfal_quaternion_from_inertial_to_body
+ *
+ * Takes vectors into the body frame using a quaternion as
+ * a rotation operator.
+ *
+ * Reference
+ *  Quaternions and Rotation Sequences (p.168) -- Jack B. Kuipers
+ */
+void rfal_quaternion_from_inertial_to_body( const double x_inertial[3], 
+					    double x_body[3],
+					    const double q[4] )
+{
+  
+  double Q[3][3] = { { 2.0 * SQ( q[0] ) - 1.0 + 2.0 * SQ( q[1] ) , 
+		       2.0 * q[1] * q[2] - 2.0 * q[0] * q[3] ,
+		       2.0 * q[1] * q[3] + 2.0 * q[0] * q[2] },
+		     { 2.0 * q[1] * q[2] + 2.0 * q[0] * q[3] ,
+		       2.0 * SQ( q[0] ) - 1.0 + 2.0 * SQ( q[2] ),
+		       2.0 * q[2] * q[3] - 2.0 * q[0] * q[1] } ,
+		     { 2.0 * q[1] * q[3] - 2.0 * q[0] * q[2] ,
+		       2.0 * q[2] * q[3] + 2.0 * q[0] * q[1] ,
+		       2.0 * SQ( q[0] ) - 1.0 + 2.0 * SQ( q[3] ) } };
+
+  for( unsigned int i = 0 ; i < 3 ; i++ )
+    for( unsigned int j = 0 ; j < 3 ; j++ )
+      x_body[i] += Q[i][j] * x_inertial[j];
+}
+
+/**
+ * rfal_quaternion_from_body_to_inertial
+ *
+ * Takes vectors into the inertial frame using a quaternion as
+ * a rotation operator.
+ *
+ * Reference
+ *  Quaternions and Rotation Sequences (p.168) -- Jack B. Kuipers
+ */
+void rfal_quaternion_from_body_to_inertial( double x_inertial[3], 
+					    const double x_body[3],
+					    const double q[4] )
+{
+  
+  double Q[3][3] = { { 2.0 * SQ( q[0] ) - 1.0 + 2.0 * SQ( q[1] ) , 
+		       2.0 * q[1] * q[2] + 2.0 * q[0] * q[3] ,
+		       2.0 * q[1] * q[3] - 2.0 * q[0] * q[2] },
+
+		     { 2.0 * q[1] * q[2] - 2.0 * q[0] * q[3] ,
+		       2.0 * SQ( q[0] ) - 1.0 + 2.0 * SQ( q[2] ),
+		       2.0 * q[2] * q[3] + 2.0 * q[0] * q[1] } ,
+
+		     { 2.0 * q[1] * q[3] + 2.0 * q[0] * q[2] ,
+		       2.0 * q[2] * q[3] - 2.0 * q[0] * q[1] ,
+		       2.0 * SQ( q[0] ) - 1.0 + 2.0 * SQ( q[3] ) } };
+
+  for( unsigned int i = 0 ; i < 3 ; i++ )
+    for( unsigned int j = 0 ; j < 3 ; j++ )
+      x_inertial[i] += Q[i][j] * x_body[j];
 }

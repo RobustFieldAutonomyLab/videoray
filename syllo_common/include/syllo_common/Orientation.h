@@ -79,4 +79,31 @@ void eulerToQuaternion_xyzw_deg(const double &roll, const double &pitch,
                                 double &z, double &w);
 
 
+/**
+ * rfal_quaternion_from_inertial_to_body
+ *
+ * Takes vectors into the body frame using a quaternion as
+ * a rotation operator.
+ *
+ * Reference
+ *  Quaternions and Rotation Sequences (p.168) -- Jack B. Kuipers
+ */
+void rfal_quaternion_from_inertial_to_body( const double x_inertial[3], 
+					    double x_body[3],
+					    const double q[4] );
+
+/**
+ * rfal_quaternion_from_body_to_inertial
+ *
+ * Takes vectors into the inertial frame using a quaternion as
+ * a rotation operator.
+ *
+ * Reference
+ *  Quaternions and Rotation Sequences (p.168) -- Jack B. Kuipers
+ */
+void rfal_quaternion_from_body_to_inertial( double x_inertial[3], 
+					    const double x_body[3],
+					    const double q[4] );
+
+
 #endif

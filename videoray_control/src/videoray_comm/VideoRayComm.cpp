@@ -708,7 +708,7 @@ void VideoRayComm::parse_rti_dvl_data(const std::string &str) {
           rti01_.water_mass_z = std::atoi(data_fields[10].c_str()) / 1000.0;
           rti01_.water_mass_depth = std::atoi(data_fields[11].c_str()) / 1000.0;
           rti01_.ready = true;
-          // rti01_.print();
+         // rti01_.print();
           break;
      case 02:
           if (data_fields.size() != 15) {
@@ -793,6 +793,7 @@ void VideoRayComm::parse_rti_dvl_data(const std::string &str) {
           rti33_.ready = true;
           break;
     }
+
 
 }
 
