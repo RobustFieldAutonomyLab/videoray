@@ -538,6 +538,10 @@ int main(int argc, char **argv)
 
        videoray_status_pub_.publish(videoray_status_);
 
+
+       // dvl data processing 
+       double v_body[3] = { 0.0 , 0.0 , 0.0 };
+
        status = comm.request_dvl_status();
        if (status != VideoRayComm::Success) {
 	 cout << "DVL Transfer Error!" << endl;
@@ -558,6 +562,10 @@ int main(int argc, char **argv)
 	 rti01_msg_.water_mass_velocity.z = rti01.water_mass_z;
 	 rti01_msg_.water_mass_depth = rti01.water_mass_depth;
 	 rti01_pub_.publish(rti01_msg_);
+
+	 v_body[0] = (double) rti01_msg_.bottom_track_velocity.x;
+	 v_body[1] = (double) rti01_msg_.bottom_track_velocity.y; 
+	 v_body[2] = (double) rti01_msg_.bottom_track_velocity.z;
        }
 
        const VideoRayComm::RTI02 &rti02 = comm.rti02();
@@ -575,6 +583,10 @@ int main(int argc, char **argv)
 	 rti02_msg_.water_mass_velocity.z = rti02.water_mass_z;
 	 rti02_msg_.water_mass_depth = rti02.water_mass_depth;
 	 rti02_pub_.publish(rti02_msg_);  
+
+	 v_body[0] = (double) rti02_msg_.bottom_track_velocity.x;
+	 v_body[1] = (double) rti02_msg_.bottom_track_velocity.y; 
+	 v_body[2] = (double) rti02_msg_.bottom_track_velocity.z;
        }
 
        const VideoRayComm::RTI03 &rti03 = comm.rti03();
@@ -636,21 +648,18 @@ int main(int argc, char **argv)
 	 rti33_pub_.publish(rti33_msg_);
        }
 
-       // output inertial velocity
-       // TODO: enable for rti02 and rti03?
-       if( rti01.ready )
+       // only publish dvl inertial velocity when data is valid
+       if( rti01.ready || rti02.ready )
        {
 	 // compute the transformation
 	 double q[4] = { (double) quat.x, 
 			 (double) quat.y,
 			 (double) quat.z,
 			 (double) quat.w }; 
-	 double v_body[3] = { (double) rti01.vector_x, 
-			      (double) rti01.vector_y, 
-			      (double) rti01.vector_z };
+	 
 	 double v_inert[3] = { 0.0 , 0.0 , 0.0 };
 	 rfal_quaternion_from_body_to_inertial( v_inert , v_body , q );
-
+	 
 	 // populating the inertial velocity
 	 rfal_dvl_vel_msg.header.stamp = ros::Time().now();
 	 rfal_dvl_vel_msg.vector.x = v_inert[0];
