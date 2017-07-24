@@ -1,6 +1,6 @@
 std_msgs/Header header
 float32 sample_time
-float32 sample_num
+int32 sample_num
 float32 temperature
 geometry_msgs/Vector3 bottom_track_velocity
 float32 bottom_track_depth
