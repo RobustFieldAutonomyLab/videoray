@@ -7,7 +7,7 @@ The ROS repository for VideoRay was originally forked from [HumAnS Lab ROS Repos
 ```
 mkdir -p videoray/src
 cd videoray/src
-git clone git@bitbucket.org:stevens-rfal/videoray.git .
+git clone https://github.com/RobustFieldAutonomyLab/videoray.git .
 catkin_init_workspace
 cd ..
 catkin_make
@@ -16,6 +16,8 @@ source devel/setup.sh
 
 sudo cp src/videoray_launch/scripts/99-usb-serial.rules /etc/udev/rules.d/
 sudo mkdir -p /var/lib/joystick
+# sudo apt-get install jstest-gtk
+# save the current configuration
 sudo cp src/videoray_launch/scripts/joystick.state /var/lib/joystick
 ```
 

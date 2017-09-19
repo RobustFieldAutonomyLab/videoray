@@ -25,6 +25,7 @@
 #include "videoray_control/RTI31.h"
 #include "videoray_control/RTI32.h"
 #include "videoray_control/RTI33.h"
+#include "videoray_control/NavData.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -195,6 +196,7 @@ int main(int argc, char **argv)
      ros::Publisher rti33_pub_ = n_.advertise<videoray_control::RTI33>("/videoray_dvl/rti33", 1);
      ros::Publisher rfal_dvl_vel_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("/videoray_dvl/rfal_dvl_vel", 1);
      ros::Publisher orientation_data_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("/videoray_dvl/rfal_dvl_ori", 1);
+     ros::Publisher nav_data_pub_ = n_.advertise<videoray_control::NavData>("/videoray_control/nav_data", 1);
 
      videoray_control::RTI01 rti01_msg_;
      videoray_control::RTI02 rti02_msg_;
@@ -211,6 +213,8 @@ int main(int argc, char **argv)
      geometry_msgs::Vector3Stamped dvl_orientation_data_msg;
      geometry_msgs::PoseStamped pose_stamped_;
      geometry_msgs::TwistStamped twist_stamped_;
+
+     videoray_control::NavData nav_data_;
 
      std::string videoray_port;
      n_.param<std::string>("port", videoray_port, "/dev/videoray");
@@ -494,6 +498,29 @@ int main(int argc, char **argv)
 	 cout << "Error: Set Manipulator State" << endl;
        }
 
+       nav_data_.time = ros::Time::now().toSec();
+       nav_data_.depth = -(double) comm.depth();
+       const VideoRayComm::RTI01 &rti01 = comm.rti01();
+       if (rti01.ready) {
+	 nav_data_.linear_velocity.x = (double) rti01_msg_.bottom_track_velocity.x;
+	 nav_data_.linear_velocity.y = (double) rti01_msg_.bottom_track_velocity.y;
+	 nav_data_.linear_velocity.z = (double) rti01_msg_.bottom_track_velocity.z;
+       } else {
+	 nav_data_.linear_velocity.x = -99.0;
+	 nav_data_.linear_velocity.y = -99.0;
+	 nav_data_.linear_velocity.z = -99.0;
+       }
+       nav_data_.orientation.x = comm.roll();
+       nav_data_.orientation.y = comm.pitch();
+       nav_data_.orientation.z = comm.heading();
+       nav_data_.linear_acceleration.x = comm.surge_accel();
+       nav_data_.linear_acceleration.y = comm.sway_accel();
+       nav_data_.linear_acceleration.z = comm.heave_accel();
+       nav_data_.angular_velocity.x = comm.roll_accel();
+       nav_data_.angular_velocity.y = comm.pitch_accel();
+       nav_data_.angular_velocity.z = comm.yaw_accel();
+       nav_data_pub_.publish(nav_data_);
+
        // Time stamp the message
        pose_stamped_.header.stamp = ros::Time().now();
        pose_stamped_.header.frame_id = "videoray";
@@ -547,7 +574,6 @@ int main(int argc, char **argv)
 	 cout << "DVL Transfer Error!" << endl;
        }
 
-       const VideoRayComm::RTI01 &rti01 = comm.rti01();
        if (rti01.ready) {
 	 rti01_msg_.header.stamp = ros::Time().now();
 	 rti01_msg_.sample_time = rti01.sample_time;

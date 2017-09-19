@@ -28,6 +28,7 @@ add_message_files(
   RTI31.msg
   RTI32.msg
   RTI33.msg
+  NavData.msg
   DVL_POSE_DATA.msg
   DVL_ORIENTATION_DATA.msg
 )
