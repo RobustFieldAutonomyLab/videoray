@@ -27,7 +27,7 @@
 #include "videoray_control/RTI33.h"
 #include "videoray_control/NavData.h"
 
-#include <opencv2/opencv.hpp>
+// #include <opencv2/opencv.hpp>
 
 #include <sstream>
 
