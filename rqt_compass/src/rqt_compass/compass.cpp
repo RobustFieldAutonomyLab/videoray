@@ -34,8 +34,6 @@
 
 #include <std_msgs/String.h>
 #include <std_msgs/Int32.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Quaternion.h>
 #include <videoray_control/NavData.h>
 
 #include <rqt_compass/compass.h>
@@ -134,7 +132,7 @@ namespace rqt_compass {
           //ui_.set_heading_button->setEnabled(checked);          
      }
 
-     void compass::callback_pose(const videoray_control::NavData& msg)
+     void compass::callback_pose(const boost::shared_ptr<const videoray_control::NavData>& msg)
      {
           orientation_ = msg->orientation;
           //printf("yaw: %f\n",yaw);

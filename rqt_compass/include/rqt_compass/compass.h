@@ -38,6 +38,7 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <std_msgs/Int32.h>
 #include <geometry_msgs/Vector3.h>
+#include <videoray_control/NavData.h>
 
 // Qt headers
 #include <QImage>
@@ -98,7 +99,7 @@ namespace rqt_compass {
 
      protected:
 
-          virtual void callback_pose(const videoray_control::NavData& msg);
+          virtual void callback_pose(const boost::shared_ptr<const videoray_control::NavData>& msg);
           
           Ui::compassWidget ui_;
 
