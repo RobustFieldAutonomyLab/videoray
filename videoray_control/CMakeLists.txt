@@ -29,8 +29,6 @@ add_message_files(
   RTI32.msg
   RTI33.msg
   NavData.msg
-  DVL_POSE_DATA.msg
-  DVL_ORIENTATION_DATA.msg
 )
 
 # Generate added messages and services with any dependencies listed here

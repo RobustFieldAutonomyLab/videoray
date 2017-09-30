@@ -10,6 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
 
+find_package(videoray_control REQUIRED)
+
 # Find Qwt
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
 find_package(Qwt REQUIRED)

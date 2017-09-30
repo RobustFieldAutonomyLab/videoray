@@ -144,8 +144,8 @@ VideoRayComm::VideoRayComm(std::string port)
      int status;
      status = serial_.Open(port.c_str(), 115200);
      if (status != 1) {
-     	  cout << "Error while opening port. Permission problem ?" << endl;
-     	  exit(-1);
+           cout << "Error while opening port. Permission problem ?" << endl;
+           exit(-1);
      }
      serial_.FlushReceiver();
 
@@ -621,8 +621,6 @@ VideoRayComm::Status_t VideoRayComm::request_dvl_status()
      rti31_.ready = false;
      rti32_.ready = false;
      rti33_.ready = false;
-     pose_data.ready = false;
-     orientation_data.ready = false;
 
      char * packet;
      int bytes;
@@ -699,9 +697,9 @@ void VideoRayComm::parse_rti_dvl_data(const std::string &str) {
           rti01_.sample_time = std::atoi(data_fields[1].c_str()) / 100.0;
           rti01_.sample_num = std::atoi(data_fields[2].c_str());
           rti01_.temperature = std::atoi(data_fields[3].c_str()) / 100.0;
-          rti01_.vector_x = std::atoi(data_fields[4].c_str()) / 1000.0;
-          rti01_.vector_y = std::atoi(data_fields[5].c_str()) / 1000.0;
-          rti01_.vector_z = std::atoi(data_fields[6].c_str()) / 1000.0;
+          rti01_.bottom_track_x = std::atoi(data_fields[4].c_str()) / 1000.0;
+          rti01_.bottom_track_y = std::atoi(data_fields[5].c_str()) / 1000.0;
+          rti01_.bottom_track_z = std::atoi(data_fields[6].c_str()) / 1000.0;
           rti01_.bottom_track_depth = std::atoi(data_fields[7].c_str()) / 1000.0;
           rti01_.water_mass_x = std::atoi(data_fields[8].c_str()) / 1000.0;
           rti01_.water_mass_y = std::atoi(data_fields[9].c_str()) / 1000.0;

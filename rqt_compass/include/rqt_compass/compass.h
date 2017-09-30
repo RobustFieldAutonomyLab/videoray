@@ -37,8 +37,7 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <std_msgs/Int32.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/Vector3.h>
 
 // Qt headers
 #include <QImage>
@@ -99,7 +98,7 @@ namespace rqt_compass {
 
      protected:
 
-          virtual void callback_pose(const geometry_msgs::PoseStampedConstPtr& msg);
+          virtual void callback_pose(const videoray_control::NavData& msg);
           
           Ui::compassWidget ui_;
 
@@ -112,7 +111,7 @@ namespace rqt_compass {
           QwtCompassMagnetNeedle *needle_;
           
           QTimer *timer_;
-          geometry_msgs::Quaternion orientation_;
+          geometry_msgs::Vector3 orientation_;
      };
 
 }

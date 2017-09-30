@@ -36,6 +36,7 @@
 #include <std_msgs/Int32.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Quaternion.h>
+#include <videoray_control/NavData.h>
 
 #include <rqt_compass/compass.h>
 
@@ -73,7 +74,7 @@ namespace rqt_compass {
           ui_.Compass->setNeedle(needle_);
                     
           // Create subscriber
-          this->subscriber_ = getNodeHandle().subscribe<geometry_msgs::PoseStamped>("/videoray_control/pose", 1, &compass::callback_pose, this);
+          this->subscriber_ = getNodeHandle().subscribe<videoray_control::NavData>("/videoray_control/nav_data", 1, &compass::callback_pose, this);
 
           // Start GUI update timer
           timer_ = new QTimer(this);
@@ -83,14 +84,14 @@ namespace rqt_compass {
      
      void compass::updateGUI()
      {
-          double roll, pitch, yaw;
+        //   double roll, pitch, yaw;
           
-          quaternionToEuler_xyzw_deg(orientation_.x, orientation_.y, 
-                                 orientation_.z, orientation_.w,
-                                 roll, pitch, yaw);
+        //   quaternionToEuler_xyzw_deg(orientation_.x, orientation_.y, 
+        //                          orientation_.z, orientation_.w,
+        //                          roll, pitch, yaw);
                     
-          ui_.heading_spinbox->setValue(yaw);
-          ui_.Compass->setValue(yaw);          
+          ui_.heading_spinbox->setValue(orientation_.z);
+          ui_.Compass->setValue(orientation_.z);          
      }
 
      bool compass::eventFilter(QObject* watched, QEvent* event)
@@ -133,9 +134,9 @@ namespace rqt_compass {
           //ui_.set_heading_button->setEnabled(checked);          
      }
 
-     void compass::callback_pose(const geometry_msgs::PoseStampedConstPtr& msg)
+     void compass::callback_pose(const videoray_control::NavData& msg)
      {
-          orientation_ = msg->pose.orientation;
+          orientation_ = msg->orientation;
           //printf("yaw: %f\n",yaw);
      }     
 }
