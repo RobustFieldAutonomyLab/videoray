@@ -1,7 +1,7 @@
 ##########################
 # Tritech USBL Parameters
 ##########################
-topic : "~usbl_pose"
+topic : "~usbl_position"
 frame_id : "/odom"
 port : "/dev/usbl"
 baudrate : 19200

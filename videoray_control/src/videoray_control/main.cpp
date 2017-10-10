@@ -498,9 +498,9 @@ int main(int argc, char **argv)
 
        const VideoRayComm::RTI01 &rti01 = comm.rti01();
        if (rti01.ready) {
-   nav_data_.linear_velocity.x =  (double) rti01.bottom_track_x;
-   nav_data_.linear_velocity.y = -(double) rti01.bottom_track_y;
-   nav_data_.linear_velocity.z =  (double) rti01.bottom_track_z;
+   nav_data_.linear_velocity.x = (double) rti01.bottom_track_x;
+   nav_data_.linear_velocity.y = (double) rti01.bottom_track_y;
+   nav_data_.linear_velocity.z = (double) rti01.bottom_track_z;
        } else {
    nav_data_.linear_velocity.x = -99.0;
    nav_data_.linear_velocity.y = -99.0;

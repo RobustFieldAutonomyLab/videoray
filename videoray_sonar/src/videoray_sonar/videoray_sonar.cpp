@@ -36,7 +36,7 @@ private:
 
 void TritechMicronNode::scanLinePub(const tritech::mtHeadDataMsg &msg)
 {
-    double deg = -msg.bearing_degrees / 180.0 * M_PI;
+    double deg = msg.bearing_degrees / 180.0 * M_PI;
     int n = msg.scanLine.size();
     scanline->width = n;
     scanline->height = 1;
