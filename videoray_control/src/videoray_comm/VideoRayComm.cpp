@@ -650,19 +650,19 @@ VideoRayComm::Status_t VideoRayComm::request_dvl_status()
      if (status == Packetizer::Success) {
           bytes = receiver_.get_payload(&packet);
           for (int x = 0 ; x < bytes ; x++) {
-               if (packet[x] == 16 || packet[x] == '\r' || packet[x] == 0)
+               if (packet[x] == 16 || packet[x] == '\r' || packet[x] == 0 || packet[x] == '\n')
                     continue;
                dvl_buff_.push_back(packet[x]);
           }
 
           while (true) {
-               std::vector<char>::iterator end = std::find(dvl_buff_.begin(), dvl_buff_.end(), '\n');
+               std::vector<char>::iterator end = std::find(dvl_buff_.begin() + 1, dvl_buff_.end(), '$');
                if (end == dvl_buff_.end())
                     break;
 
                std::string str(dvl_buff_.begin(), end);
                parse_rti_dvl_data(str);
-               dvl_buff_.erase(dvl_buff_.begin(), end + 1);
+               dvl_buff_.erase(dvl_buff_.begin(), end);
           }
       } else {
           printf("DVL Status - Decode Error.\n");

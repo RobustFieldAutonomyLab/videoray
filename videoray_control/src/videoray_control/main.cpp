@@ -553,6 +553,7 @@ int main(int argc, char **argv)
        twist_pub_.publish(twist_stamped_);
        */
 
+/*
        status = comm.request_status();
        if (status != VideoRayComm::Success) {
    cout << "Exec Transfer Error!" << endl;
@@ -563,6 +564,7 @@ int main(int argc, char **argv)
        videoray_status_.voltage_12V = comm.rov_voltage();
 
        videoray_status_pub_.publish(videoray_status_);
+*/
 
        /*
        // dvl data processing 
