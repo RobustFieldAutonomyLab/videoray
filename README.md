@@ -1,5 +1,7 @@
 # VideoRay ROS Packages
 
+[![Build Status](https://travis-ci.org/RobustFieldAutonomyLab/videoray.svg?branch=master)](https://travis-ci.org/RobustFieldAutonomyLab/videoray)
+
 ## Getting Started
 
 This package supports ROS Indigo, Jade and Kinetic. First, clone this repository and build the videoray package.
