@@ -1,8 +1,0 @@
-std_msgs/Header header
-float32 sample_time
-int32 sample_num
-float32 temperature
-geometry_msgs/Vector3 bottom_track_velocity
-float32 bottom_track_depth
-geometry_msgs/Vector3 water_mass_velocity
-float32 water_mass_depth

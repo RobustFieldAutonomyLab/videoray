@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>videoray_control</name>
+    <name>videoray</name>
     <version>0.0.1</version>
-    <description>The VideoRay ROS package</description>
+    <description>
+        The VideoRay Pro V4 ROS package supports VectorNav VN-100 IMU, Tritech Micron Sonar, Tritech USBL and Rowe Seapilot DVL.
+    </description>
+    <author>Jinkun Wang</author>
     <maintainer email="jwang92@stevens.edu">Jinkun Wang</maintainer>
     <license>MIT</license>
+
     <url type="repository">https://github.com/RobustFieldAutonomyLab/videoray</url>
 
     <buildtool_depend>catkin</buildtool_depend>
-
-    <depend>roscpp</depend>
-    <depend>serial</depend>
     <depend>videoray_msgs</depend>
 </package>

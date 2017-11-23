@@ -1,0 +1,31 @@
+#**************************************
+#**********Sonar parameters************
+#**************************************
+# Serial port the sonar is connected to
+dev : "/dev/tritech_micron"
+# Number of measurements to be taken (max 800)
+nbins : 200
+# Sonar range (m)
+range : 10
+# Velocity of sound in water
+VOS : 1500
+# Angle between two consecutive steps, in 1/16 gradians:
+# CrazyLow: 7.2°   = 128
+# VeryLow: 3.6°    = 64
+# Low: 1.8°        = 32
+# Medium: 0.9°     = 16
+# High: 0.45°      = 8
+# Ultimate: 0.225° = 4
+angle_step: 32
+# Limit of scanning sector
+# Left 90°     = 1600
+# Ahead        = 3200
+# Right 90°    = 4800
+# Astern       = 0 (6399)
+# Left 45°     = 2400
+# Right 45°    = 4000
+# 360°         = cont (ignore angle limits)
+left_limit : 0
+right_limit : 6399
+# 360° scan
+cont : true

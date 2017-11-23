@@ -1,5 +1,0 @@
-<launch>
-  <node pkg="videoray_usbl" type="usbl_node.py" name="videoray_usbl" output="screen">
-     <rosparam command="load" file="$(find videoray_launch)/params/usbl.yaml" />
-  </node>
-</launch>

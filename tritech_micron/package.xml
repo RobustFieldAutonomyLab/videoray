@@ -1,17 +1,16 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>videoray_input</name>
+  <name>tritech_micron</name>
   <version>0.0.1</version>
-  <description>The videoray_input package</description>
+  <description>The Tritech Micron ROS package</description>
   <maintainer email="jwang92@stevens.edu">Jinkun Wang</maintainer>
   <license>MIT</license>
   <url type="repository">https://github.com/RobustFieldAutonomyLab/videoray</url>
-  <author email="jwang92@stevens.edu">Jinkun Wang</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>sensor_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>serial</depend>
   <depend>videoray_msgs</depend>
-  <depend>joy</depend>
+  <depend>pcl_ros</depend>
 </package>
-

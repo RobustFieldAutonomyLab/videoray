@@ -1,5 +1,9 @@
 <launch>
-    <node pkg="videoray_control" name="videoray_control" type="videoray_control" output="screen">
-        <rosparam command="load" file="$(find videoray_launch)/params/control.yaml" />
+    <arg name="dev" default="/dev/videoray"/>
+    <arg name="nav_data_topic" default="nav_data"/>
+
+    <node pkg="videoray_control" type="videoray_control" name="videoray_control">
+        <param name="dev" value="$(arg dev)"/>
+        <param name="nav_data_topic" value="$(arg nav_data_topic)"/>
     </node>
 </launch>

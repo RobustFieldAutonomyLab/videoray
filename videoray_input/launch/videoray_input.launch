@@ -1,0 +1,9 @@
+<launch>
+    <node pkg="joy" name="joy_node" type="joy_node">
+        <rosparam command="load" file="$(find videoray_input)/launch/joystick.yaml" />
+        <param name="autorepeat_rate" value="10" />
+    </node>
+    <node pkg="videoray_input" name="videoray_input" type="videoray_input">
+        <rosparam command="load" file="$(find videoray_input)/launch/joystick.yaml" />
+    </node>
+</launch>

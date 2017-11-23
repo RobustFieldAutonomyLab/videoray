@@ -1,0 +1,12 @@
+<launch>
+    <arg name="topic" default="scanline" />
+
+    <node pkg="tritech_micron" name="tritech_micron" type="tritech_micron" output="screen">
+        <rosparam command="load" file="$(find tritech_micron)/launch/tritech_micron.yaml" />
+        <param name="topic" value="$(arg topic)" />
+    </node>
+
+    <node pkg="tritech_micron" name="scanline_to_pointcloud" type="scanline_to_pointcloud" output="screen">
+        <param name="from" value="/tritech_micron/$(arg topic)" />
+    </node>
+</launch>
