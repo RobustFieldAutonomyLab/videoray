@@ -83,7 +83,7 @@
 namespace videoray_control {
 
 VideoRayComm::VideoRayComm(std::string port)
-  : serial_(port, 115200, serial::Timeout(serial::Timeout::max())) {
+  : serial_(port, 115200, serial::Timeout(serial::Timeout::max(), serial::Timeout::max(), 0, serial::Timeout::max(), 0)) {
   if (!serial_.isOpen()) {
     ROS_ERROR_STREAM("Failed to connect to VideoRay serial port: " << port);
     exit(-1);

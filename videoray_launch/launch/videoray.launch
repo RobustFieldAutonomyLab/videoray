@@ -1,0 +1,41 @@
+<launch>
+  <arg name="js" default="false"/>
+  <arg name="max_depth" default="5.0"/>
+
+  <arg name="micron" default="false"/>
+  <arg name="micron_range" default="10.0"/>
+
+  <arg name="js_dev" default="/dev/input/videorayjs"/>
+  <arg name="micron_dev" default="/dev/tritech_micron"/>
+  <arg name="videoray_dev" default="/dev/videoray"/>
+
+  <group if="$(arg js)">
+    <node pkg="joy" name="joy_node" type="joy_node">
+      <param name="dev" value="$(arg js_dev)"/>
+      <param name="autorepeat_rate" value="0.0"/>
+    </node>
+    <node pkg="videoray_input" name="videoray_input" type="videoray_input">
+      <param name="max_depth" value="$(arg max_depth)"/>
+    </node>
+  </group>
+
+  <group if="$(arg micron)">
+    <arg name="topic" value="scanline"/>
+
+    <node pkg="tritech_micron" name="tritech_micron" type="tritech_micron" output="screen">
+      <rosparam command="load" file="$(find tritech_micron)/launch/tritech_micron.yaml"/>
+      <param name="topic" value="$(arg topic)"/>
+      <param name="range" value="$(arg micron_range)"/>
+    </node>
+
+    <node pkg="tritech_micron" name="scanline_to_pointcloud" type="scanline_to_pointcloud" output="screen">
+      <param name="from" value="/tritech_micron/$(arg topic)"/>
+    </node>
+  </group>
+
+  <group>
+      <node pkg="videoray_control" type="videoray_control" name="videoray_control">
+        <param name="dev" value="$(arg videoray_dev)"/>
+      </node>
+  </group>
+</launch>

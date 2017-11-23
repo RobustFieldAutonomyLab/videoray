@@ -1,49 +1,30 @@
 # VideoRay ROS Packages
 
-The ROS repository for VideoRay was originally forked from [HumAnS Lab ROS Repository](https://github.com/gt-ros-pkg/humans). Now it supports Tritech Micron sonar and USBL.
+## Getting Started
 
-# Build
+This package supports ROS Indigo, Jade and Kinetic. First, clone this repository and build the videoray package.
 
 ```
-mkdir -p videoray/src
-cd videoray/src
-git clone https://github.com/RobustFieldAutonomyLab/videoray.git .
+mkdir -p YOUR_WS/src && cd YOUR_WS/src
+git clone https://github.com/RobustFieldAutonomyLab/videoray.git
 catkin_init_workspace
-cd ..
-catkin_make
-
+rosdep install --from-paths src --ignore-src -r -y
+cd .. && catkin_make
 source devel/setup.sh
-
-sudo cp src/videoray_launch/scripts/99-usb-serial.rules /etc/udev/rules.d/
-sudo mkdir -p /var/lib/joystick
-# sudo apt-get install jstest-gtk
-# save the current configuration
-sudo cp src/videoray_launch/scripts/joystick.state /var/lib/joystick
 ```
 
-Camera
+To avoid manually configuring device names every time, it's recommended to put [persistent naming rules](./99-usb-serial.rules) on the machine.
 
 ```
-sudo apt-get install v4l-utils gstreamer0.10 libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev
+sudo mv ./99-usb-serial.rules /etc/udev/rules.d/
 ```
 
-# Published Topics
+Finally, launch VideoRay and other devices. See launch file for more parameters.
 
-1. `/videoray_control/pose`: `geometry_msgs/PoseStamped`
-2. `/videoray_control/accelerations`: `geometry_msgs/TwistStamped`
-3. `/videoray_control/throttle_cmd`: `videoray_control/Throttle`
-4. `/videoray_sonar/sonarscan`: `sensor_msgs/PointCloud2`
-5. `/videoray_usbl/usbl_pose`: `geometry_msgs/PoseStamped`
-6. `/videoray_dvl/rti**`: RTI DVL packets
+```
+roslaunch videoray_launch videoray.launch
+```
 
-# Subscribed Topics
+# Acknowledgments
 
-1. `/videoray_input/joystick`: `sensor_msgs/Joy`
-2. `/videoray_input/throttle`: `videoray_control/Throttle`
-3. `/videoray_input/desired_trajectory`: `videoray_control/DesiredTrajectory`
-4. `/videoray_sonar/valid` `std_msgs/Bool`
-
-# Launch
-
-1. Change permissions `sudo rosrun videoray_launch check_dev.sh`.
-2. Launch VideoRay `roslaunch videoray_launch videoray.launch`. Disable accessories as needed by `sonar:=false js:=false usbl:=false camera:=false`. If you don't disable accessories that are not connected, the program will crash because it can't find the corresponding ports.
+The ROS repository for VideoRay was originally forked from [HumAnS Lab ROS Repository](https://github.com/gt-ros-pkg/humans).

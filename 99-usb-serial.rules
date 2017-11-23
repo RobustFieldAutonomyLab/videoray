@@ -1,0 +1,4 @@
+SUBSYSTEM=="tty", ATTRS{interface}=="USB Null Modem Cable", SYMLINK+="tritech_usbl", MODE="0777"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0c52", ATTRS{idProduct}=="2104", ATTRS{serial}=="SLB7hQYa", SYMLINK+="tritech_micron", MODE="0777"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0c52", ATTRS{idProduct}=="2104", ATTRS{serial}=="SLRA8dBQ", SYMLINK+="videoray", MODE="0777"
+KERNEL=="js*", SUBSYSTEM=="input", SYMLINK+="input/videorayjs", MODE="0777"
