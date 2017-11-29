@@ -6,7 +6,7 @@
 
 ros::Publisher navDataPub;
 
-const int16_t MAXINT16 = 32767;
+const int16_t MAXRANGE = 89;
 int16_t port;
 int16_t star;
 int16_t vert;
@@ -16,9 +16,9 @@ bool autoHeading = false;
 int16_t desiredHeading;
 
 void throttleCallback(const videoray_msgs::ThrottleConstPtr &msg) {
-  port = int16_t(trunc(msg->port * MAXINT16));
-  star = int16_t(trunc(msg->star * MAXINT16));
-  vert = int16_t(trunc(msg->vert * MAXINT16));
+  port = int16_t(trunc(msg->port * MAXRANGE));
+  star = int16_t(trunc(msg->star * MAXRANGE));
+  vert = int16_t(trunc(msg->vert * MAXRANGE));
   autoDepth = msg->auto_depth;
   if (autoDepth) {
     desiredDepth = int16_t(msg->desired_depth * 100.0 + 1000);

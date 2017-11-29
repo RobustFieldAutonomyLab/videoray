@@ -48,8 +48,8 @@ void joyCallback(const sensor_msgs::JoyConstPtr &msg) {
   cmd.star = msg->axes[1];
 
   float turn = msg->axes[0];
-  cmd.port -= turn;
-  cmd.star += turn;
+  cmd.port += turn;
+  cmd.star -= turn;
 
   cmdPub.publish(cmd);
 }

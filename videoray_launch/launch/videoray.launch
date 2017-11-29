@@ -34,7 +34,7 @@
   </group>
 
   <group>
-      <node pkg="videoray_control" type="videoray_control" name="videoray_control">
+      <node pkg="videoray_control" type="videoray_control" name="videoray_control" output="screen">
         <param name="dev" value="$(arg videoray_dev)"/>
       </node>
   </group>
