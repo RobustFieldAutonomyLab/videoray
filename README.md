@@ -10,8 +10,8 @@ This package supports ROS Indigo, Jade and Kinetic. First, clone this repository
 mkdir -p YOUR_WS/src && cd YOUR_WS/src
 git clone https://github.com/RobustFieldAutonomyLab/videoray.git
 catkin_init_workspace
-rosdep install --from-paths src --ignore-src -r -y
-cd .. && catkin_make
+cd .. && rosdep install --from-paths src --ignore-src -r -y
+catkin_make
 source devel/setup.sh
 ```
 
