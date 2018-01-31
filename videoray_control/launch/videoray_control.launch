@@ -1,9 +1,11 @@
 <launch>
     <arg name="dev" default="/dev/videoray"/>
     <arg name="nav_data_topic" default="nav_data"/>
+    <arg name="dvl" default="true"/>
 
     <node pkg="videoray_control" type="videoray_control" name="videoray_control">
         <param name="dev" value="$(arg dev)"/>
         <param name="nav_data_topic" value="$(arg nav_data_topic)"/>
+        <param name="dvl" value="$(arg dvl)"/>
     </node>
 </launch>

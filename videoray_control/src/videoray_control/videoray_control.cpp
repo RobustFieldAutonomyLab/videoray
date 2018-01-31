@@ -37,9 +37,9 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "videoray_control");
   ros::NodeHandle nh("~");
 
-
   std::string dev = nh.param("dev", std::string("/dev/videoray"));
   std::string navDataTopic = nh.param("nav_data_topic", std::string("nav_data"));
+  bool dvlEnabled = nh.param("dvl", true);
 
   videoray_control::VideoRayComm comm(dev);
   ros::Subscriber throttleSub = nh.subscribe<>("/videoray_input/throttle", 100, &throttleCallback);
@@ -67,9 +67,11 @@ int main(int argc, char **argv) {
 
     navData.stamp = ros::Time::now();
     comm.send_nav_data_command();
-    comm.request_dvl_status();
 
-    if (comm.rti01_.ready) {
+    if (dvlEnabled)
+      comm.request_dvl_status();
+
+    if (dvlEnabled && comm.rti01_.ready) {
       navData.linear_velocity.x = (double) comm.rti01_.bottom_track_x;
       navData.linear_velocity.y = (double) comm.rti01_.bottom_track_y;
       navData.linear_velocity.z = (double) comm.rti01_.bottom_track_z;

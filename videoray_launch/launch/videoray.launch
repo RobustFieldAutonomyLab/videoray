@@ -5,6 +5,8 @@
   <arg name="micron" default="false"/>
   <arg name="micron_range" default="10.0"/>
 
+  <arg name="dvl" default="true"/>
+
   <arg name="js_dev" default="/dev/input/videorayjs"/>
   <arg name="micron_dev" default="/dev/tritech_micron"/>
   <arg name="videoray_dev" default="/dev/videoray"/>
@@ -36,6 +38,7 @@
   <group>
       <node pkg="videoray_control" type="videoray_control" name="videoray_control" output="screen">
         <param name="dev" value="$(arg videoray_dev)"/>
+        <param name="dvl" value="$(arg dvl)">
       </node>
   </group>
 </launch>
